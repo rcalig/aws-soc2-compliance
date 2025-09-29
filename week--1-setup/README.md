@@ -1,15 +1,23 @@
 # Week -1: Setup & Basics
 
+## Purpose
+This week sets up the foundation for all future compliance automation:
+- Create a secure evidence bucket with versioning and encryption.
+- Add a budget guardrail to prevent surprise costs.
+- Test Python boto3 access by uploading the first evidence file.
+- Create an IAM role and Lambda function for automated evidence collection.
+
 ## Controls Covered
-- None (foundation week).
+- None directly (foundation setup).
+- Supports later SOC 2 controls by ensuring evidence is encrypted, versioned, and private.
 
-## Learning Objectives
-- **CLI**: Install AWS CLI, configure profiles, create S3 bucket, enable versioning and encryption.
-- **Python**: Install Python 3.11, boto3. Write a script to list S3 buckets.
-- **Lambda**: Deploy first “Hello World” Lambda with AWS CLI.
+## Deliverables
+- **S3 bucket**: `grc-evidence-<accountid>-<timestamp>` with versioning + KMS encryption.
+- **Budget**: FreeTier-Guardrail set at $5 with email alert.
+- **Python evidence**: `buckets.json` uploaded to `/bootstrap/`.
+- **Lambda**: Hello function writes `hello-<timestamp>.json` into `/bootstrap/`.
+- **IAM + KMS**: Lambda role with S3+KMS access, `alias/grc-evidence`.
 
-## Evidence Produced
-- `s3-setup.sh` and `kms-setup.sh` (CLI scripts).
-- `list_buckets.py` (Python script).
-- `lambda_function.py` (Hello World Lambda).
-- S3 bucket `grc-evidence` created and versioned.
+## Evidence in S3
+- `/bootstrap/buckets-YYYY-MM-DD.json`
+- `/bootstrap/hello-YYYY-MM-DDTHH-MM-SSZ.json`
