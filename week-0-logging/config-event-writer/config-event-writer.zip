@@ -1,0 +1,3 @@
+cd config-event-writer
+zip -r ../config-event-writer.zip .
+cd ..
