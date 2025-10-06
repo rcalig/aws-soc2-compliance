@@ -1,25 +1,28 @@
-set -e
-export AWS_REGION=ap-southeast-2
-export AWS_PROFILE=grc-sandbox
+  # Variables
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+TIMESTAMP=$(date +%Y%m%d%H%M%S)
+BUCKET="grc-evidence-$ACCOUNT_ID-$TIMESTAMP"
 
-KEY_ID=$(aws kms create-key --description "GRC Evidence Key" --query KeyMetadata.KeyId --output text)
-aws kms create-alias --alias-name alias/grc-evidence --target-key-id "$KEY_ID"
+# Create bucket (replace region if not ap-southeast-2)
+aws s3api create-bucket \
+  --bucket $BUCKET \
+  --region ap-southeast-2 \
+  --create-bucket-configuration LocationConstraint=ap-southeast-2
 
-echo '{
-  "Rules": [
-    {
-      "ApplyServerSideEncryptionByDefault": {
-        "SSEAlgorithm": "aws:kms",
-        "KMSMasterKeyID": "'"$KEY_ID"'"
-      },
-      "BucketKeyEnabled": true
-    }
-  ]
-}' > bucket-encryption.json
+# Enable versioning
+aws s3api put-bucket-versioning \
+  --bucket $BUCKET \
+  --versioning-configuration Status=Enabled
 
+# Create a KMS CMK and alias
+KEY_ID=$(aws kms create-key --query KeyMetadata.KeyId --output text)
+aws kms create-alias --alias-name alias/grc-evidence --target-key-id $KEY_ID
+
+# Enable default encryption with KMS
 aws s3api put-bucket-encryption \
-  --bucket "$1" \
-  --server-side-encryption-configuration file://bucket-encryption.json
+  --bucket $BUCKET \
+  --server-side-encryption-configuration '{
+    "Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"aws:kms","KMSMasterKeyID":"'$KEY_ID'"}}]
+  }'
 
-echo "KMS key created: $KEY_ID and bucket encryption enabled"
+echo "✅ Evidence bucket $BUCKET created with KMS alias/grc-evidence"
