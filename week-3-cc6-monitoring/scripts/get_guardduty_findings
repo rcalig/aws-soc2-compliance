@@ -1,0 +1,17 @@
+cat > scripts/get_findings.sh <<'EOF'
+#!/bin/bash
+set -e
+echo "Retrieving GuardDuty findings..."
+DETECTOR_ID=$(cat detector_id.txt)
+FINDING_IDS=$(aws guardduty list-findings --detector-id $DETECTOR_ID --query 'FindingIds' --output text)
+if [ -z "$FINDING_IDS" ]; then
+  echo "No findings found. Creating empty file."
+  echo '{"Findings":[]}' > guardduty-findings.json
+else
+  aws guardduty get-findings --detector-id $DETECTOR_ID --finding-ids $FINDING_IDS > guardduty-findings.json
+fi
+echo "guardduty-findings.json saved."
+EOF
+
+chmod +x scripts/get_findings.sh
+scripts/get_findings.sh
