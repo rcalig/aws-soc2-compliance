@@ -1,3 +1,0 @@
-cd hello-lambda
-zip -r ../hello.zip .
-cd ..
