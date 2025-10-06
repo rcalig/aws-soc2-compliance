@@ -1,14 +1,20 @@
-import json, boto3, datetime
+# Save as upload_buckets.py
+import boto3, json, datetime
 
 s3 = boto3.client("s3")
-resp = s3.list_buckets()
+client = boto3.client("s3")
+timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d")
 
-out = {
-    "timestamp_utc": datetime.datetime.utcnow().isoformat(),
-    "buckets": [b["Name"] for b in resp.get("Buckets", [])]
-}
+# List all buckets
+buckets = client.list_buckets()
 
-with open("buckets.json", "w") as f:
-    f.write(json.dumps(out, indent=2))
+# Save evidence
+filename = f"buckets-{timestamp}.json"
+with open(filename, "w") as f:
+    json.dump(buckets, f, indent=2)
 
-print(json.dumps(out, indent=2))
+# Upload to /bootstrap/ folder
+bucket_name = "grc-evidence-<accountid>-<timestamp>"  # replace
+s3.upload_file(filename, bucket_name, f"bootstrap/{filename}")
+
+print(f"✅ Evidence uploaded to s3://{bucket_name}/bootstrap/{filename}")
