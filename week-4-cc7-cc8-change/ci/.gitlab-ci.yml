@@ -1,0 +1,30 @@
+stages:
+  - sast
+  - evidence
+
+variables:
+  AWS_DEFAULT_REGION: "ap-southeast-2"
+  EVIDENCE_BUCKET: "grc-evidence-<accountid>"
+
+sast_semgrep:
+  stage: sast
+  image: returntocorp/semgrep:latest
+  script:
+    - semgrep ci --config p/ci --json --output semgrep-results.json || true
+  artifacts:
+    when: always
+    paths:
+      - semgrep-results.json
+
+upload_evidence:
+  stage: evidence
+  image: python:3.11
+  script:
+    - pip install boto3
+    - python scripts/gitlab_artifact_upload.py
+  dependencies:
+    - sast_semgrep
+  artifacts:
+    when: always
+    paths:
+      - evidence/
